@@ -6,7 +6,7 @@
 
     The intention is to use this script as very high-level and *informal* as-built documentation
 
-    Thanks to Christian Johannsen for the ridiculously easy Python code used to consume the Nutanix API [http://datatomix.com/?p=146]
+    Thanks to Christian Johannsen for the ridiculously easy Python method used to consume the Nutanix API [http://datatomix.com/?p=146]
 
 """
 
@@ -21,8 +21,8 @@ __status__ = "Development"
 # required modules
 import sys
 import json
-import fpdf
 import os.path
+import socket
 import getpass
 import requests
 import urllib
@@ -30,21 +30,6 @@ import xhtml2pdf
 from time import localtime, strftime
 from xhtml2pdf import pisa
 from string import Template
-
-# set the options you'd like to use
-# these will apply for the duration of the script
-def set_options():
-    global center
-    global font
-    global font_size
-    global page_size
-
-    # make changes here, if required
-    center=80
-    font="Helvetica"
-    font_size=12
-    page_size='a4'
-    # page_size='letter'
 
 #################################################
 #                                               #
@@ -84,37 +69,42 @@ class ApiClient():
 
 # load the JSON file
 # at this point we have already confirmed that cluster.json exists
-# this method isn't currently used
+# this method isn't used right now
 def process_json():
     with open('cluster.json') as data_file:
         return json.load(data_file)
 
+# load JSON data from an on-disk file
+def load_json(file):
+    with open(file) as data_file:
+        return json.load(data_file)
+
 # do the actual PDF generation
-def generate_pdf(data_in):
+def generate_pdf(cluster_in, container_in):
     # the current time right now
     day=strftime("%d-%b-%Y", localtime())
     time=strftime("%H%M%S", localtime())
     now="%s_%s" % (day, time)
 
     # the name of the PDF file to generate
-    pdf_file="%s_%s_cluster.pdf" % (now, data_in["name"])
+    pdf_file="%s_%s_cluster.pdf" % (now, cluster_in["name"])
 
     #
     # the next block parses some of the cluster info that currently exists as arrays
     #
 
     ntp_servers = ""
-    for ntp_server in data_in["ntpServers"]:
+    for ntp_server in cluster_in["ntpServers"]:
         ntp_servers = ntp_servers + ", " + ntp_server
     ntp_servers = ntp_servers.strip(',')
 
     name_servers = ""
-    for name_server in data_in["nameServers"]:
+    for name_server in cluster_in["nameServers"]:
         name_servers = name_servers + ", " + name_server
     name_servers = name_servers.strip(',')
 
     hypervisors = ""
-    for hypervisor in data_in["hypervisorTypes"]:
+    for hypervisor in cluster_in["hypervisorTypes"]:
         if hypervisor == "kKvm":
             hypervisor_name = "Acropolis"
         elif hypervisor == "kVMware":
@@ -125,111 +115,39 @@ def generate_pdf(data_in):
     hypervisors = hypervisors.strip(',')
 
     node_models = ""
-    for model in data_in["rackableUnits"]:
-            node_models = node_models + ", " + model["model"] + " [S/N " + model["serial"] + "]"
+    for model in cluster_in["rackableUnits"]:
+        node_models = node_models + ", " + model["model"] + " [ S/N " + model["serial"] + " ]"
     node_models = node_models.strip(',')
 
+    containers = ""
+    for container in container_in["entities"]:
+        containers = containers + ", " + container["name"] + " [ RF: " + container["replicationFactor"] + ", compression: " + container["compressionEnabled"] + ", deduplication: " + container["onDiskDedup"] + " ]<br>"
+    containers = containers.strip(',')
+
     # specify the HTML page template
-    source_html_test = Template("""<!doctype html>
-
-                                <html lang="en-us">
-
-                                <head>
-                                    <meta charset="utf-8">
-                                    <title>Nutanix Cluster Details</title>
-                                </head>
-
-                                <body>
-
-                                <p>Nutanix cluster details :: Generated on <strong>$day</strong> at <strong>$now</strong> by <strong>$name</strong> (logged in as $username)</p>
-
-                                <table>
-                                   <tr>
-                                       <td>Cluster Name</td>
-                                       <td>Cluster IP address</td>
-                                       <td># Nodes</td>
-                                       <td>NOS Version</td>
-                                   </tr>
-                                   <tr>
-                                       <td>$cluster_name</td>
-                                       <td>$cluster_ip</td>
-                                       <td>$nodes</td>
-                                       <td>$nos</td>
-                                   </tr>
-                                </table>
-
-                                <hr>
-
-                                <table>
-                                   <tr>
-                                       <td>Hypervisors</td>
-                                   </tr>
-                                   <tr>
-                                       <td>$hypervisors</td>
-                                   </tr>
-                                </table>
-
-                                <hr>
-
-                                <table>
-                                   <tr>
-                                       <td>Models</td>
-                                   </tr>
-                                   <tr>
-                                       <td>$models</td>
-                                   </tr>
-                                </table>
-
-                                <hr>
-
-                                <table>
-                                   <tr>
-                                       <td>Cluster Timezone</td>
-                                       <td>NTP Servers</td>
-                                       <td>Name Servers</td>
-                                   </tr>
-                                   <tr>
-                                       <td>$timezone</td>
-                                       <td>$ntp_servers</td>
-                                       <td>$name_servers</td>
-                                   </tr>
-                                </table>
-
-                                <hr>
-
-                                <table>
-                                    <tr>
-                                        <td>Desired RF</td>
-                                        <td>Actual RF</td>
-                                    </tr>
-                                    <tr>
-                                        <td>$desired_rf</td>
-                                        <td>$actual_rf</td>
-                                    </tr>
-                                 </table>
-
-                                </body>
-
-                                </html>
-    """)
+    with open( "template.html", "r") as data_file:
+        source_html = Template( data_file.read() )
 
     # substitute the template variables for actual cluster data
-    template = source_html_test.safe_substitute(
+    template = source_html.safe_substitute(
         day=day,
         now=time,
         name=name,
         username=getpass.getuser(),
-        cluster_name=data_in["name"],
-        cluster_ip=data_in["clusterExternalIPAddress"],
-        nodes=data_in["numNodes"],
-        nos=data_in["version"],
+        cluster_name=cluster_in["name"],
+        cluster_ip=cluster_in["clusterExternalIPAddress"] if cluster_in["clusterExternalIPAddress"] else "Not set",
+        nodes=cluster_in["numNodes"],
+        nos=cluster_in["version"],
         hypervisors=hypervisors,
         models=node_models,
-        timezone=data_in["timezone"],
+        timezone=cluster_in["timezone"],
         ntp_servers=ntp_servers,
         name_servers=name_servers,
-        desired_rf=data_in["clusterRedundancyState"]["desiredRedundancyFactor"],
-        actual_rf=data_in["clusterRedundancyState"]["currentRedundancyFactor"]
+        desired_rf=cluster_in["clusterRedundancyState"]["desiredRedundancyFactor"],
+        actual_rf=cluster_in["clusterRedundancyState"]["currentRedundancyFactor"],
+        nos_full=cluster_in["fullVersion"],
+        containers=containers,
+        computer_name=socket.gethostname()
     )
 
     # enable logging so we can see what's going on, then generate the final PDF file
@@ -266,44 +184,57 @@ Connect to a Nutanix cluster, get some detail about the cluster and generate a b
 
 Intended to generate a very high-level and *informal* as-built document.
 
-This script is GPL and there is *no warranty* provided with this script ... AT ALL.
-Formal documentation should be generated using best-practice methods that suit your environment.
+This script is GPL and there is *no warranty* provided with this script ... AT ALL.  You can use and modify this script as you wish, but please make sure the changes are appropriate for the intended environment.
+
+Formal documentation should always be generated using best-practice methods that suit your environment.
 """ % sys.argv[0]
 
 def main():
 
-    show_intro()
+    if os.path.isfile("template.html"):
+        show_intro()
 
-    # first we must make sure the cluster JSON file exists in the currect directory
-    # if os.path.isfile( 'cluster.json' ) == True:
+        # first we must make sure the cluster JSON file exists in the currect directory
+        # if os.path.isfile( 'cluster.json' ) == True:
 
-    # get the cluster connection info
-    get_options()
+        # get the cluster connection info
+        get_options()
 
-    # set the script's options, as specified above
-    set_options()
+        # disable warnings
+        # don't do this in production scripts but will disable annoying warnings here
+        requests.packages.urllib3.disable_warnings()
 
-    # disable warnings
-    # don't do this in production scripts but will disable annoying warnings here
-    requests.packages.urllib3.disable_warnings()
+        # make sure all required info has been provided
+        if not name:
+            raise Exception("Name cannot be empty.")
+        elif not cluster_ip:
+            raise Exception("Cluster IP is required.")
+        elif not username:
+            raise Exception("Username is required.")
+        elif not password:
+            raise Exception("Password is required.")
+        else:
+            # all required info has been provided - we can continue
+            # setup the connection info
+            # cluster_client = ApiClient(cluster_ip, "cluster", username, password)
+            # container_client = ApiClient(cluster_ip, "containers", username, password)
+            # connect to the cluster and get the cluster details
+            # cluster_json = cluster_client.get_info()
+            # container_json = container_client.get_info()
 
-    # make sure all required info has been provided
-    if not name:
-        raise Exception("Name cannot be empty.")
-    elif not cluster_ip:
-        raise Exception("Cluster IP is required.")
-    elif not username:
-        raise Exception("Username is required.")
-    elif not password:
-        raise Exception("Password is required.")
+            # if you have data in a JSON file you can load them this way instead
+            # this section would likely only be used in modified versions of this script where a live Nutanix cluster is not available
+            with open('cluster.json') as data_file:
+                cluster_json = json.load(data_file)
+            with open('container.json') as data_file:
+                container_json = json.load(data_file)
+
+            # process the JSON data and create the PDF file
+            generate_pdf(cluster_json, container_json)
+
     else:
-        # all required info has been provided - we can continue
-        # setup the connection info
-        client = ApiClient(cluster_ip, "cluster", username, password)
-        # connect to the cluster and get the cluster details
-        cluster_json = client.get_info()
-        # process the JSON data and create the PDF file
-        generate_pdf(cluster_json)
+        print "\nUnfortunately template.html was not found in the current directory.  You'll need this file to continue.\n"
 
 if __name__ == "__main__":
     main()
+

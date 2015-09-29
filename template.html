@@ -1,0 +1,118 @@
+<!doctype html>
+
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <title>Nutanix Cluster Details</title>
+    <style type="text/css">
+        tr.final { border-bottom: 1px solid #eee; padding: 3px; }
+        tr.footer { padding: 5px; text-align: center; }
+    </style>
+</head>
+
+<body>
+
+<p><h1>Cluster Configuration</h1>
+
+<table>
+    <tr>
+        <td>Cluster Name</td>
+        <td>Cluster IP address</td>
+        <td># Nodes</td>
+    </tr>
+    <tr class="final">
+        <td>$cluster_name</td>
+        <td>$cluster_ip</td>
+        <td>$nodes</td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td>NOS Version</td>
+        <td>NOS Full Version</td>
+    </tr>
+    <tr class="final">
+        <td>$nos</td>
+        <td>$nos_full</td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td>Cluster Timezone</td>
+        <td>NTP Server(s)</td>
+        <td>Name Server(s)</td>
+    </tr>
+    <tr class="final">
+        <td>$timezone</td>
+        <td>$ntp_servers</td>
+        <td>$name_servers</td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td>Desired RF</td>
+        <td>Actual RF</td>
+    </tr>
+    <tr class="final">
+        <td>$desired_rf</td>
+        <td>$actual_rf</td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td>Hypervisor(s)</td>
+    </tr>
+    <tr class="final">
+        <td>$hypervisors</td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td>Model(s)</td>
+    </tr>
+    <tr class="final">
+        <td>$models</td>
+    </tr>
+</table>
+
+<br>
+
+<p><h1>Storage</h1>
+
+<table>
+    <tr>
+        <td>Container(s)</td>
+    </tr>
+    <tr class="final">
+        <td>$containers</td>
+    </tr>
+</table>
+
+<table>
+    <tr class="footer">
+        <td>
+            Nutanix cluster details :: Generated on <strong>$day</strong> at <strong>$now</strong> by <strong>$name</strong> (logged in as $username)<br>
+            Computer name :: $computer_name
+        </td>
+    </tr>
+</table>
+
+</body>
+
+</html>
