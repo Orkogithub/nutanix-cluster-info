@@ -121,7 +121,7 @@ def generate_pdf(cluster_in, container_in):
 
     containers = ""
     for container in container_in["entities"]:
-        containers = containers + container["name"] + " [ RF: " + str(container["replicationFactor"]) + ", compression: " + str(container["compressionEnabled"]) + ", deduplication: " + str(container["onDiskDedup"]) + " ]<br>"
+        containers = containers + container["name"] + " [ RF: " + str(container["replicationFactor"]) + ", compression: " + str(container["compressionEnabled"]) + ", deduplication: " + str(container["onDiskDedup"]) + " ], "
     containers = containers.strip(',')
 
     # specify the HTML page template
