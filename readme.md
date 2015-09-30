@@ -1,5 +1,7 @@
 # Nutanix Cluster Info
 
+"As-built" documentation script for use with Nutanix clusters.
+
 ## Author
 
 Chris Rasmussen, Systems Engineer, Nutanix (Melbourne, AU)
@@ -62,11 +64,17 @@ The commands to do the same thing on Windows will be _similar_ to the above.
 python nutanix-cluster-info.py
 ```
 
+## Script Testing
+
+There are two small sections that load the cluster details from on-disk JSON files - both sections are commented out, by default.  These have been left in the script intentionally, for testing purposes.
+
 ## Custom Templates
 
 Included with this script should be a file called 'template.html'.
 
 This is an HTML5 document containing a sample layout that can be used with this script.  If you want to modify the generated PDF's content or layout, edit template.html to suit your requirements.
+
+Please note the included 'template.html' file includes CSS styles that implement the 'Gotham Rounded Book' font - this is simply to demonstrate usage of custom TrueType fonts (supported by xhtml2pdf library).  Gotham Rounded Book isn't a free font so please feel free to modify template.html if you don't have this font available.
 
 _Please make sure the file is still called 'template.html' when you are finished._
 

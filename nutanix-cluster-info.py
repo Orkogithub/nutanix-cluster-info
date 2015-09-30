@@ -31,15 +31,6 @@ from time import localtime, strftime
 from xhtml2pdf import pisa
 from string import Template
 
-#################################################
-#                                               #
-#                    STOP                       #
-#                  EDITING                      #
-#                   HERE                        #
-#                    :)                         #
-#                                               #
-#################################################
-
 def get_options():
     global name
     global cluster_ip
