@@ -121,8 +121,7 @@ def generate_pdf(cluster_in, container_in):
 
     containers = ""
     for container in container_in["entities"]:
-        containers = containers + container["name"] + " [ RF: " + str(container["replicationFactor"]) + ", compression: " + str(container["compressionEnabled"]) + ", deduplication: " + str(container["onDiskDedup"]) + " ], "
-    containers = containers.strip(',')
+        containers = containers + "<tr class=\"final\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (container["name"], str(container["replicationFactor"]), str(container["compressionEnabled"]), str(container["onDiskDedup"]) )
 
     # specify the HTML page template
     with open( "template.html", "r") as data_file:
@@ -147,6 +146,7 @@ def generate_pdf(cluster_in, container_in):
         actual_rf=cluster_in["clusterRedundancyState"]["currentRedundancyFactor"],
         nos_full=cluster_in["fullVersion"],
         containers=containers,
+        container_count=container_in["metadata"]["grandTotalEntities"],
         computer_name=socket.gethostname()
     )
 

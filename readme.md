@@ -85,6 +85,7 @@ As of the current release, the required fields in template.html are as follows (
 -   $hypervisors        [ A list of the hypervisors running on this cluster ]
 -   $models             [ A list of Nutanix node models in this cluster + their serial numbers ]
 -   $containers         [ A list of the cluster's containers, including RF, compression & deduplication summary ]
+-   $container_count    [ The total number of containers ]
 -   $day                [ The date this script was run ]
 -   $now                [ The time this script was run ]
 -   $name               [ The name you provide when running the script ]
