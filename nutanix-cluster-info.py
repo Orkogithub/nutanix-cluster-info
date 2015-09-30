@@ -121,7 +121,7 @@ def generate_pdf(cluster_in, container_in):
 
     containers = ""
     for container in container_in["entities"]:
-        containers = containers + ", " + container["name"] + " [ RF: " + container["replicationFactor"] + ", compression: " + container["compressionEnabled"] + ", deduplication: " + container["onDiskDedup"] + " ]<br>"
+        containers = containers + container["name"] + " [ RF: " + str(container["replicationFactor"]) + ", compression: " + str(container["compressionEnabled"]) + ", deduplication: " + str(container["onDiskDedup"]) + " ]<br>"
     containers = containers.strip(',')
 
     # specify the HTML page template
@@ -216,18 +216,18 @@ def main():
         else:
             # all required info has been provided - we can continue
             # setup the connection info
-            # cluster_client = ApiClient(cluster_ip, "cluster", username, password)
-            # container_client = ApiClient(cluster_ip, "containers", username, password)
+            cluster_client = ApiClient(cluster_ip, "cluster", username, password)
+            container_client = ApiClient(cluster_ip, "containers", username, password)
             # connect to the cluster and get the cluster details
-            # cluster_json = cluster_client.get_info()
-            # container_json = container_client.get_info()
+            cluster_json = cluster_client.get_info()
+            container_json = container_client.get_info()
 
             # if you have data in a JSON file you can load them this way instead
             # this section would likely only be used in modified versions of this script where a live Nutanix cluster is not available
-            with open('cluster.json') as data_file:
-                cluster_json = json.load(data_file)
-            with open('container.json') as data_file:
-                container_json = json.load(data_file)
+            # with open('cluster.json') as data_file:
+                # cluster_json = json.load(data_file)
+            # with open('container.json') as data_file:
+                # container_json = json.load(data_file)
 
             # process the JSON data and create the PDF file
             generate_pdf(cluster_json, container_json)
