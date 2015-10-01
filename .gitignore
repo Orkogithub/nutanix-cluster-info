@@ -3,3 +3,4 @@
 *.json
 *.ttf
 resources/*
+templates/nutanix.html

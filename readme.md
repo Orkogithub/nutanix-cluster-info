@@ -70,15 +70,17 @@ There are two small sections that load the cluster details from on-disk JSON fil
 
 ## Custom Templates
 
-Included with this script should be a file called 'template.html'.
+Included with this script should be an HTML file called 'templates/template.html'.
 
-This is an HTML5 document containing a sample layout that can be used with this script.  If you want to modify the generated PDF's content or layout, edit template.html to suit your requirements.
+### Summary
 
-Please note the included 'template.html' file includes CSS styles that implement the 'Gotham Rounded Book' font - this is simply to demonstrate usage of custom TrueType fonts (supported by xhtml2pdf library).  Gotham Rounded Book isn't a free font so please feel free to modify template.html if you don't have this font available.
+This is an HTML5 document containing a sample layout that can be used with this script.  If you want to modify the generated PDF's content or layout, edit templates/template.html to suit your requirements.
 
-_Please make sure the file is still called 'template.html' when you are finished._
+### Available Fields
 
-As of the current release, the required fields in template.html are as follows (all are to be prefixed with a '$' symbol, as shown):
+_Please make sure the file is saved as 'templates/template.html' when you are finished._
+
+As of the current release, the required fields in templates/template.html are as follows (all are to be prefixed with a '$' symbol, as shown):
 
 -   $cluster_name       [ The name of your Nutanix cluster ]
 -   $cluster_ip         [ The cluster's external IP address ]
@@ -100,9 +102,18 @@ As of the current release, the required fields in template.html are as follows (
 -   $username           [ The username of the current logged-in user ]
 -   $computer_name      [ The current local computer name ]
 
+### PDF Formatting
+
+This script uses 'xhtml2pdf' for PDF generation.  Please see the [xhtml2pdf documentation](https://github.com/xhtml2pdf/xhtml2pdf/blob/master/doc/usage.rst) for detailed information on the available formatting options.
+
 ## Example output using included template
 
 ![Example Script Output](https://raw.githubusercontent.com/digitalformula/nutanix-cluster-info/master/screenshot.png?raw=true "Example Script Output")
 
 ![Example PDF](https://raw.githubusercontent.com/digitalformula/nutanix-cluster-info/master/screenshot-pdf.png?raw=true "Example PDF")
+
+## Limitations/Issues
+
+-   Currently there is a limit on the number of containers a Nutanix cluster can have before the HTML to PDF converter will have trouble formatting them.  This only seems to apply when using the xhtml2pdf @frame option.
+-   Table cell overflow doesn't always seem to work as expected with xhtml2pdf.  Keep this in mind if your templates are supposed to have content within a defined area, but don't show anything.
 

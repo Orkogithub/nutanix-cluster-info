@@ -112,10 +112,18 @@ def generate_pdf(cluster_in, container_in):
 
     containers = ""
     for container in container_in["entities"]:
-        containers = containers + "<tr class=\"final\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (container["name"], str(container["replicationFactor"]), str(container["compressionEnabled"]), str(container["onDiskDedup"]) )
+        containers = containers + "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (container["name"], str(container["replicationFactor"]), str(container["compressionEnabled"]), str(container["onDiskDedup"]) )
 
     # specify the HTML page template
-    with open( "template.html", "r") as data_file:
+    # nutanix.html doesn't exist in the public repo (used for testing without messing with repo version)
+    # at this point we have already verified that template.html exists, at least
+    if os.path.isfile( "./templates/nutanix.html" ):
+        template_name = "./templates/nutanix.html"
+    else:
+        template_name = "./templates/template.html"
+
+    # load the HTML content from the template
+    with open( template_name, "r") as data_file:
         source_html = Template( data_file.read() )
 
     # substitute the template variables for actual cluster data
@@ -182,7 +190,7 @@ Formal documentation should always be generated using best-practice methods that
 
 def main():
 
-    if os.path.isfile("template.html"):
+    if os.path.isfile("./templates/template.html") or os.path.isfile("./templates/nutanix.html"):
         show_intro()
 
         # first we must make sure the cluster JSON file exists in the currect directory
@@ -224,7 +232,7 @@ def main():
             generate_pdf(cluster_json, container_json)
 
     else:
-        print "\nUnfortunately template.html was not found in the current directory.  You'll need this file to continue.\n"
+        print "\nNo HTML templates were found in the current directory.  You'll need one of these to continue.\n"
 
 if __name__ == "__main__":
     main()
