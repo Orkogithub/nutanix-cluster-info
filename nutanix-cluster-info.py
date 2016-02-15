@@ -12,7 +12,6 @@
 
 __author__ = "Chris Rasmussen @ Nutanix"
 __contributors__ = "Christian Johannsen @ Nutanix, http://github.com/xhtml2pdf"
-__license__ = "GPL"
 __version__ = "1.0"
 __maintainer__ = "Chris Rasmussen @ Nutanix"
 __email__ = "crasmussen@nutanix.com"
@@ -107,7 +106,10 @@ def generate_pdf(cluster_in, container_in):
 
     node_models = ""
     for model in cluster_in["rackableUnits"]:
-        node_models = node_models + ", " + model["model"] + " [ S/N " + model["serial"] + " ]"
+        try:
+            node_models = node_models + ", " + model["modelName"] + " [ S/N " + model["serial"] + " ]"
+        except TypeError:
+            node_models = 'None available'
     node_models = node_models.strip(',')
 
     containers = ""
@@ -132,19 +134,19 @@ def generate_pdf(cluster_in, container_in):
         now=time,
         name=name,
         username=getpass.getuser(),
-        cluster_name=cluster_in["name"],
-        cluster_ip=cluster_in["clusterExternalIPAddress"] if cluster_in["clusterExternalIPAddress"] else "Not set",
-        nodes=cluster_in["numNodes"],
-        nos=cluster_in["version"],
+        cluster_name=str(cluster_in["name"]),
+        cluster_ip=str(cluster_in["clusterExternalIPAddress"]) if cluster_in["clusterExternalIPAddress"] else "Not set",
+        nodes=str(cluster_in["numNodes"]),
+        nos=str(cluster_in["version"]),
         hypervisors=hypervisors,
-        models=node_models,
-        timezone=cluster_in["timezone"],
-        ntp_servers=ntp_servers,
-        name_servers=name_servers,
+        models=str(node_models),
+        timezone=str(cluster_in["timezone"]),
+        ntp_servers=str(ntp_servers),
+        name_servers=str(name_servers),
         desired_rf=cluster_in["clusterRedundancyState"]["desiredRedundancyFactor"],
         actual_rf=cluster_in["clusterRedundancyState"]["currentRedundancyFactor"],
-        nos_full=cluster_in["fullVersion"],
-        containers=containers,
+        nos_full=str(cluster_in["fullVersion"]),
+        containers=str(containers),
         container_count=container_in["metadata"]["grandTotalEntities"],
         computer_name=socket.gethostname()
     )
