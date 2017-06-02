@@ -4,3 +4,4 @@
 *.ttf
 resources/*
 templates/nutanix.html
+.idea/

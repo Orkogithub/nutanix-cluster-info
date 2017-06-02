@@ -49,11 +49,27 @@ _Note: Depending on your configuration you may need to run the above command wit
 
 This library, if you don't have it, can be installed on OS X with the following commands, in order:
 
+Automatically/easy way:
+
+```
+sudo pip install xhtml2pdf
+```
+
+Manually:
+
 ```
 wget -O xhtml2pdf-master.zip https://codeload.github.com/chrisglass/xhtml2pdf/zip/master
 unzip xhtml2pdf-master.zip
 cd xhtml2pdf-master
 sudo python setup.py install
+```
+
+### Optional Installation:
+
+When installing xhtml2pdf on Mac OS X Sierra (10.12), I ran into an error that made the script complain about missing 'viewkeys' imports.  To fix the issue I had to install the html5 library, as follows:
+
+```
+sudo -H pip install html5lib==1.0b8
 ```
 
 The commands to do the same thing on Windows will be _similar_ to the above.
