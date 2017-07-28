@@ -1,7 +1,5 @@
 .DS_Store
 *.pdf
 *.json
-*.ttf
-resources/*
-templates/nutanix.html
 .idea/
+.vscode/
