@@ -4,15 +4,14 @@
 
     Connect to a Nutanix cluster, grab some high-level details then generate a PDF from it
 
-    The intention is to use this script as very high-level and *informal* as-built documentation
+    The intention is to use this script as very high-level and *unofficial* as-built documentation
 
-    Thanks to Christian Johannsen for the ridiculously easy Python method used to consume the Nutanix API [http://datatomix.com/?p=146]
+    You would need to *heavily* modify this script for use in a production environment so that it contains appropriate error-checking, exception handling and data collection
 
 """
 
 __author__ = "Chris Rasmussen @ Nutanix"
-__contributors__ = "Christian Johannsen @ Nutanix, http://github.com/xhtml2pdf"
-__version__ = "1.0"
+__version__ = "1.1"
 __maintainer__ = "Chris Rasmussen @ Nutanix"
 __email__ = "crasmussen@nutanix.com"
 __status__ = "Development"
@@ -47,7 +46,7 @@ class ApiClient():
         self.cluster_ip = cluster_ip
         self.username = username
         self.password = password
-        self.base_url = "https://%s:9440/PrismGateway/services/rest/v1" % (self.cluster_ip)
+        self.base_url = "https://%s:9440/api/nutanix/v2.0" % (self.cluster_ip)
         self.request_url = "%s/%s" % (self.base_url, request)
 
     def get_info(self):
@@ -55,6 +54,7 @@ class ApiClient():
         s.auth = (self.username, self.password)
         s.headers.update({'Content-Type': 'application/json; charset=utf-8'})
         data = s.get(self.request_url, verify=False).json()
+        
         return data
 
 # load the JSON file
@@ -84,17 +84,17 @@ def generate_pdf(cluster_in, container_in):
     #
 
     ntp_servers = ""
-    for ntp_server in cluster_in["ntpServers"]:
+    for ntp_server in cluster_in["ntp_servers"]:
         ntp_servers = ntp_servers + ", " + ntp_server
     ntp_servers = ntp_servers.strip(',')
 
     name_servers = ""
-    for name_server in cluster_in["nameServers"]:
+    for name_server in cluster_in["name_servers"]:
         name_servers = name_servers + ", " + name_server
     name_servers = name_servers.strip(',')
 
     hypervisors = ""
-    for hypervisor in cluster_in["hypervisorTypes"]:
+    for hypervisor in cluster_in["hypervisor_types"]:
         if hypervisor == "kKvm":
             hypervisor_name = "Acropolis"
         elif hypervisor == "kVMware":
@@ -105,16 +105,16 @@ def generate_pdf(cluster_in, container_in):
     hypervisors = hypervisors.strip(',')
 
     node_models = ""
-    for model in cluster_in["rackableUnits"]:
+    for model in cluster_in["rackable_units"]:
         try:
-            node_models = node_models + ", " + model["modelName"] + " [ S/N " + model["serial"] + " ]"
+            node_models = node_models + ", " + model["model_name"] + " [ S/N " + model["serial"] + " ]"
         except TypeError:
             node_models = 'None available'
     node_models = node_models.strip(',')
 
     containers = ""
     for container in container_in["entities"]:
-        containers = containers + "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (container["name"], str(container["replicationFactor"]), str(container["compressionEnabled"]), str(container["onDiskDedup"]) )
+        containers = containers + "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (container["name"], str(container["replication_factor"]), str(container["compression_enabled"]), str(container["on_disk_dedup"]) )
 
     # specify the HTML page template
     # nutanix.html doesn't exist in the public repo (used for testing without messing with repo version)
@@ -135,19 +135,19 @@ def generate_pdf(cluster_in, container_in):
         name=name,
         username=getpass.getuser(),
         cluster_name=str(cluster_in["name"]),
-        cluster_ip=str(cluster_in["clusterExternalIPAddress"]) if cluster_in["clusterExternalIPAddress"] else "Not set",
-        nodes=str(cluster_in["numNodes"]),
+        cluster_ip=str(cluster_in["cluster_external_ipaddress"]) if cluster_in["cluster_external_ipaddress"] else "Not set",
+        nodes=str(cluster_in["num_nodes"]),
         nos=str(cluster_in["version"]),
         hypervisors=hypervisors,
         models=str(node_models),
         timezone=str(cluster_in["timezone"]),
         ntp_servers=str(ntp_servers),
         name_servers=str(name_servers),
-        desired_rf=cluster_in["clusterRedundancyState"]["desiredRedundancyFactor"],
-        actual_rf=cluster_in["clusterRedundancyState"]["currentRedundancyFactor"],
-        nos_full=str(cluster_in["fullVersion"]),
+        desired_rf=cluster_in["cluster_redundancy_state"]["desired_redundancy_factor"],
+        actual_rf=cluster_in["cluster_redundancy_state"]["current_redundancy_factor"],
+        nos_full=str(cluster_in["full_version"]),
         containers=str(containers),
-        container_count=container_in["metadata"]["grandTotalEntities"],
+        container_count=container_in["metadata"]["grand_total_entities"],
         computer_name=socket.gethostname()
     )
 
@@ -183,7 +183,7 @@ def show_intro():
 
 Connect to a Nutanix cluster, get some detail about the cluster and generate a basic PDF from those details.
 
-Intended to generate a very high-level and *informal* as-built document.
+Intended to generate a very high-level and *unofficial* as-built document.
 
 This script is GPL and there is *no warranty* provided with this script ... AT ALL.  You can use and modify this script as you wish, but please make sure the changes are appropriate for the intended environment.
 
@@ -218,7 +218,7 @@ def main():
             # all required info has been provided - we can continue
             # setup the connection info
             cluster_client = ApiClient(cluster_ip, "cluster", username, password)
-            container_client = ApiClient(cluster_ip, "containers", username, password)
+            container_client = ApiClient(cluster_ip, "storage_containers", username, password)
             # connect to the cluster and get the cluster details
             cluster_json = cluster_client.get_info()
             container_json = container_client.get_info()

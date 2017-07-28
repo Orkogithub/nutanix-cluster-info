@@ -4,21 +4,21 @@
 
 ## Author
 
-Chris Rasmussen, Systems Engineer, Nutanix (Melbourne, AU)
+Chris Rasmussen, Solutions Architect, Nutanix (Melbourne, AU)
 
 ## Details
 
 Connect to a Nutanix cluster, grab some high-level details then generate a PDF from it.
 
-The intention is to use this script to generate very high-level and *informal* as-built documentation.
+The intention is to use this script to generate very high-level and *unofficial* as-built documentation.
 
 ## Requirements
 
--   Python  :)
+-   Python 2.7
 -   Python 'pip' to install "requests" library
 -   Python "requests" library (see below)
 -   Python "xhtml2pdf" library (see below)
--   A Nutanix cluster (script has been tested on Nutanix OS >=4.1.4)
+-   A Nutanix cluster (script has been tested on Nutanix OS >=4.1.4 and will also function quite happily on Nutanix Community Edition)
 -   Credentials for that cluster (read-only is fine)
 
 ### Python "requests" library
@@ -80,6 +80,12 @@ The commands to do the same thing on Windows will be _similar_ to the above.
 python nutanix-cluster-info.py
 ```
 
+## Script Fonts
+
+A free variant of the popular "Gotham Rounded" typeface, Bariol Regular, has been included in this repository.  For manual downloads, the Bariol Regular typeface can be downloaded from here:
+
+[Bariol Regular Font Download](http://www.cufonfonts.com/en/font/13281/bariol-regular)
+
 ## Script Testing
 
 There are two small sections that load the cluster details from on-disk JSON files - both sections are commented out, by default.  These have been left in the script intentionally, for testing purposes.
@@ -87,6 +93,8 @@ There are two small sections that load the cluster details from on-disk JSON fil
 ## Custom Templates
 
 Included with this script should be an HTML file called 'templates/template.html'.
+
+There is also an included template called "nutanix.html" that demonstrates how include TrueType fonts in your own custom templates.  It is "nutanix.html" that uses the Bariol Regular typeface.
 
 ### Summary
 
@@ -132,4 +140,3 @@ This script uses 'xhtml2pdf' for PDF generation.  Please see the [xhtml2pdf docu
 
 -   Currently there is a limit on the number of containers a Nutanix cluster can have before the HTML to PDF converter will have trouble formatting them.  This only seems to apply when using the xhtml2pdf @frame option.
 -   Table cell overflow doesn't always seem to work as expected with xhtml2pdf.  Keep this in mind if your templates are supposed to have content within a defined area, but don't show anything.
-
