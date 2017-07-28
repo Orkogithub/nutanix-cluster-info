@@ -234,8 +234,7 @@ def main():
             generate_pdf(cluster_json, container_json)
 
     else:
-        print "\nNo HTML templates were found in the current directory.  You'll need one of these to continue.\n"
+        print "\nNo HTML templates were found in the 'templates' directory.  You'll need one of these to continue.\n"
 
 if __name__ == "__main__":
     main()
-
