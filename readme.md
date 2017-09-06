@@ -160,3 +160,9 @@ As of the current release, the required fields in templates/nutanix.html are as 
 ### PDF Formatting
 
 As of version 1.2, this script uses 'WeasyPrint' for PDF generation.  Please see the [WeasyPrint docs](http://weasyprint.readthedocs.io/en/latest) for detailed information on the available formatting options.
+
+## Screenshot
+
+This is what the PDF looks like, once generated.
+
+![Generated PDF screenshot](https://github.com/digitalformula/nutanix-cluster-info/raw/master/screenshot-pdf.png)
