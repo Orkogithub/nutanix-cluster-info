@@ -2,9 +2,17 @@
 
 "As-built" documentation script for use with Nutanix clusters.
 
+## Disclaimer
+
+This is *not* a production-grade script.  Please make sure you add appropriate exception handling and error-checking before running it in production.
+
 ## Author
 
 Chris Rasmussen, Solutions Architect, Nutanix (Melbourne, AU)
+
+## Changes
+
+2017.09.06 - Published new version based on Python 3
 
 ## Details
 
@@ -12,13 +20,48 @@ Connect to a Nutanix cluster, grab some high-level details then generate a PDF f
 
 The intention is to use this script to generate very high-level and *unofficial* as-built documentation.
 
-## Requirements
+The other idea is for you, the user, to take this script and modify it to suit your client requirements.
+
+## Requirements (new/Weasy-based version - Easy)
+
+### Mac
+
+Install [HomeBrew](https://brew.sh/):
+
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+Install WeasyPrint dependencies:
+
+```
+brew install python3 cairo pango gdk-pixbuf libffi
+pip3 install requests
+```
+
+Install WeasyPrint:
+
+Note: This step may require elevated privileges, depending on your system (i.e. use 'sudo').
+
+```
+pip3 install WeasyPrint
+```
+
+### Windows
+
+Follow the instructions here: [http://weasyprint.readthedocs.io/en/latest/install.html#windows](http://weasyprint.readthedocs.io/en/latest/install.html#windows)
+
+Sorry, I haven't been able to test any of this on Windows just yet.
+
+## Requirements (old/XHTML2PDF version - Painful, new version recommended)
+
+I'm leaving this section in the script readme, just in case someone needs it later.  I strongly recommend using the new Python3-based version, though.
 
 -   Python 2.7
 -   Python 'pip' to install "requests" library
 -   Python "requests" library (see below)
 -   Python "xhtml2pdf" library (see below)
--   A Nutanix cluster (script has been tested on Nutanix OS >=4.1.4 and will also function quite happily on Nutanix Community Edition)
+-   A Nutanix cluster (script has been tested on Acropolis OS >=4.1.4 and will also function quite happily on Nutanix Community Edition)
 -   Credentials for that cluster (read-only is fine)
 
 ### Python "requests" library
@@ -74,43 +117,31 @@ sudo -H pip install html5lib==1.0b8
 
 The commands to do the same thing on Windows will be _similar_ to the above.
 
-## Script Usage
+## Script Usage (OS X)
 
 ```
-python nutanix-cluster-info.py
+/usr/local/bin/python3 nutanix-cluster-info.py
 ```
-
-## Script Fonts
-
-A free variant of the popular "Gotham Rounded" typeface, Bariol Regular, has been included in this repository.  For manual downloads, the Bariol Regular typeface can be downloaded from here:
-
-[Bariol Regular Font Download](http://www.cufonfonts.com/en/font/13281/bariol-regular)
-
-## Script Testing
-
-There are two small sections that load the cluster details from on-disk JSON files - both sections are commented out, by default.  These have been left in the script intentionally, for testing purposes.
 
 ## Custom Templates
 
-Included with this script should be an HTML file called 'templates/template.html'.
-
-There is also an included template called "nutanix.html" that demonstrates how include TrueType fonts in your own custom templates.  It is "nutanix.html" that uses the Bariol Regular typeface.
+Included with this script is an HTML file called 'templates/nutanix.html'.
 
 ### Summary
 
-This is an HTML5 document containing a sample layout that can be used with this script.  If you want to modify the generated PDF's content or layout, edit templates/template.html to suit your requirements.
+This is an HTML5 document containing a sample layout that can be used with this script.  If you want to modify the generated PDF's content or layout, edit templates/nutanix.html to suit your requirements.
 
 ### Available Fields
 
-_Please make sure the file is saved as 'templates/template.html' when you are finished._
+_Please make sure the file is saved as 'templates/nutanix.html' when you are finished._
 
-As of the current release, the required fields in templates/template.html are as follows (all are to be prefixed with a '$' symbol, as shown):
+As of the current release, the required fields in templates/nutanix.html are as follows (all are to be prefixed with a '$' symbol, as shown):
 
 -   $cluster_name       [ The name of your Nutanix cluster ]
 -   $cluster_ip         [ The cluster's external IP address ]
 -   $nodes              [ The number of nodes in the clusters ]
--   $nos                [ The Nutanix OS (NOS) version ]
--   $nos_full           [ The *full* Nutanix OS (NOS) version i.e. the complete build number ]
+-   $nos                [ The Acropolis (AOS) version ]
+-   $nos_full           [ The *full* Acropolis (AOS) version i.e. the complete build number ]
 -   $timezone           [ Cluster time zone ]
 -   $ntp_servers        [ Configured NTP servers, if any ]
 -   $name_servers       [ Configured name/DNS servers, if any ]
@@ -128,15 +159,4 @@ As of the current release, the required fields in templates/template.html are as
 
 ### PDF Formatting
 
-This script uses 'xhtml2pdf' for PDF generation.  Please see the [xhtml2pdf documentation](https://github.com/xhtml2pdf/xhtml2pdf/blob/master/doc/usage.rst) for detailed information on the available formatting options.
-
-## Example output using included template
-
-![Example Script Output](https://raw.githubusercontent.com/digitalformula/nutanix-cluster-info/master/screenshot.png?raw=true "Example Script Output")
-
-![Example PDF](https://raw.githubusercontent.com/digitalformula/nutanix-cluster-info/master/screenshot-pdf.png?raw=true "Example PDF")
-
-## Limitations/Issues
-
--   Currently there is a limit on the number of containers a Nutanix cluster can have before the HTML to PDF converter will have trouble formatting them.  This only seems to apply when using the xhtml2pdf @frame option.
--   Table cell overflow doesn't always seem to work as expected with xhtml2pdf.  Keep this in mind if your templates are supposed to have content within a defined area, but don't show anything.
+As of version 1.2, this script uses 'WeasyPrint' for PDF generation.  Please see the [WeasyPrint docs](http://weasyprint.readthedocs.io/en/latest) for detailed information on the available formatting options.

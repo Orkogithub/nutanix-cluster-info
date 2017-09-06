@@ -3,3 +3,5 @@
 *.json
 .idea/
 .vscode/
+work/
+.project

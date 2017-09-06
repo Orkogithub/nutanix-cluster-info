@@ -11,10 +11,10 @@
 """
 
 __author__ = "Chris Rasmussen @ Nutanix"
-__version__ = "1.1"
+__version__ = "1.2"
 __maintainer__ = "Chris Rasmussen @ Nutanix"
 __email__ = "crasmussen@nutanix.com"
-__status__ = "Development"
+__status__ = "Development/Demo"
 
 # required modules
 import sys
@@ -22,12 +22,16 @@ import json
 import os.path
 import socket
 import getpass
-import requests
-import urllib
-import xhtml2pdf
 from time import localtime, strftime
-from xhtml2pdf import pisa
 from string import Template
+
+import urllib.request
+import urllib.parse
+import urllib3
+import requests
+from requests.auth import HTTPBasicAuth
+from weasyprint import HTML, CSS
+from weasyprint.fonts import FontConfiguration
 
 def get_options():
     global name
@@ -35,9 +39,9 @@ def get_options():
     global username
     global password
 
-    name = raw_input('Please enter your name: ')
-    cluster_ip = raw_input('CVM IP address: ')
-    username = raw_input('Cluster username: ' )
+    name = input('Please enter your name: ')
+    cluster_ip = input('CVM IP address: ')
+    username = input('Cluster username: ' )
     password = getpass.getpass()
 
 class ApiClient():
@@ -50,13 +54,35 @@ class ApiClient():
         self.request_url = "%s/%s" % (self.base_url, request)
 
     def get_info(self):
-        s = requests.Session()
-        s.auth = (self.username, self.password)
-        s.headers.update({'Content-Type': 'application/json; charset=utf-8'})
-        data = s.get(self.request_url, verify=False).json()
         
-        return data
-
+        urllib3.disable_warnings()
+        headers = {'Content-Type': 'application/json; charset=utf-8'}
+        try:
+            r = requests.get(self.request_url, verify=False, headers=headers, auth=HTTPBasicAuth(self.username, self.password), timeout=5)
+        except requests.ConnectTimeout:
+            print('Connection timed out while connecting to %s. Please check your connection, then try again.' % self.cluster_ip)
+            sys.exit()
+        except requests.ConnectionError:
+            print('An error occurred while connecting to %s. Please check your connection, then try again.' % self.cluster_ip)
+            sys.exit()
+        except requests.HTTPError:
+            print('An HTTP error occurred while connecting to %s. Please check your connection, then try again.' % self.cluster_ip)
+            sys.exit()
+        
+        if r.status_code >= 500:
+            print('An HTTP server error has occurred (%s)' % r.status_code ) 
+        else:
+            if r.status_code == 401:
+                print('An authentication error occurred while connecting to %s. Please check your credentials, then try again.' % self.cluster_ip)
+                sys.exit()
+            if r.status_code >= 401:
+                print('An HTTP client error has occurred (%s)' % r.status_code )
+                sys.exit()
+            else:
+                print('Connected and authenticated successfully.')
+        
+        return(r.json())
+        
 # load the JSON file
 # at this point we have already confirmed that cluster.json exists
 # this method isn't used right now
@@ -96,11 +122,13 @@ def generate_pdf(cluster_in, container_in):
     hypervisors = ""
     for hypervisor in cluster_in["hypervisor_types"]:
         if hypervisor == "kKvm":
-            hypervisor_name = "Acropolis"
+            hypervisor_name = "AHV"
         elif hypervisor == "kVMware":
             hypervisor_name = "ESXi"
         elif hypervisor == "kHyperv":
             hypervisor_name = "Hyper-V"
+        elif hypervisor == "kXen":
+            hypervisor_name = "Xen Server"
         hypervisors = hypervisors + ", " + hypervisor_name
     hypervisors = hypervisors.strip(',')
 
@@ -117,7 +145,6 @@ def generate_pdf(cluster_in, container_in):
         containers = containers + "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (container["name"], str(container["replication_factor"]), str(container["compression_enabled"]), str(container["on_disk_dedup"]) )
 
     # specify the HTML page template
-    # nutanix.html doesn't exist in the public repo (used for testing without messing with repo version)
     # at this point we have already verified that template.html exists, at least
     if os.path.isfile( "./templates/nutanix.html" ):
         template_name = "./templates/nutanix.html"
@@ -150,35 +177,49 @@ def generate_pdf(cluster_in, container_in):
         container_count=container_in["metadata"]["grand_total_entities"],
         computer_name=socket.gethostname()
     )
-
-    # enable logging so we can see what's going on, then generate the final PDF file
-    pisa.showLogging()
+    
+    # generate the final PDF file
     convert_html_to_pdf(template, pdf_file)
 
-    print """
-Finished generating PDF file:
-
-%s
-""" % pdf_file
+    print("""Finished generating PDF file: %s """ % pdf_file)
 
 # utility function for HTML to PDF conversion
 def convert_html_to_pdf(source_html, output_filename):
     # open output file for writing (truncated binary)
-    result_file = open(output_filename, "w+b")
-
+    # result_file = open(output_filename, "w+b")
+        
+    font_config = FontConfiguration()
+        
+    # HTML(string=source_html).write_pdf(output_filename,stylesheets=[CSS(string='@font-face {font-family: grb;src: url(./resources/Bariol.ttf);}#header_content {left: 50pt; width: 512pt; top: 50pt; height: 40pt;}#footer_content {left: 50pt; width: 512pt; top: 772pt; height: 20pt;}#main_content {left: 50pt; width: 512pt; top: 90pt; height: 632pt;}margin: 2cm;body { font-family: grb; font-size: 120%; }h1 { color: #3f6fb4; }tr.final { border-bottom: 1px solid #eee; padding: 3px 0; }tr.footer { padding: 5px; text-align: center; }div#footer_content { text-align: center; }h1 { font-family: Gentium }', font_config=font_config)])
+    
+    x=HTML(string=source_html)
+    x.write_pdf(output_filename,stylesheets=[CSS(string='''
+        @font-face { font-family: bariol; src: url(Bariol.ttf); }
+        h1 { color: #3f6fb4; }
+        body { font-family: sans-serif; font-size: 80%; }
+        #main_content { margin: 0 auto; text-align: left; width: 75%; }
+        table{ width: 100%; border-bottom: 1px solid #ddd; padding-bottom: 20px; }
+        tr.final { border-bottom: 1px solid #eee; padding: 3px 0; }
+        tr.footer { padding: 5px; text-align: center; }
+        tr.tr_header { font-weight: bold; }
+        div#footer_content { text-align: center; margin-top: 20px; }
+    ''',font_config=font_config)])    
+    
+    sys.exit()
+    
     # convert HTML to PDF
-    pisaStatus = pisa.CreatePDF(
-        source_html,
-        dest=result_file)
+    #pisaStatus = pisa.CreatePDF(
+    #    source_html,
+    #    dest=result_file)
 
     # close output file
-    result_file.close()
+    # result_file.close()
 
     # return True on success and False on errors
-    return pisaStatus.err
+    # return pisaStatus.err
 
 def show_intro():
-    print """
+    print( """
 %s:
 
 Connect to a Nutanix cluster, get some detail about the cluster and generate a basic PDF from those details.
@@ -188,11 +229,11 @@ Intended to generate a very high-level and *unofficial* as-built document.
 This script is GPL and there is *no warranty* provided with this script ... AT ALL.  You can use and modify this script as you wish, but please make sure the changes are appropriate for the intended environment.
 
 Formal documentation should always be generated using best-practice methods that suit your environment.
-""" % sys.argv[0]
+""" % sys.argv[0])
 
 def main():
 
-    if os.path.isfile("./templates/template.html") or os.path.isfile("./templates/nutanix.html"):
+    if os.path.isfile("./templates/nutanix.html"):
         show_intro()
 
         # first we must make sure the cluster JSON file exists in the currect directory
@@ -203,7 +244,7 @@ def main():
 
         # disable warnings
         # don't do this in production scripts but will disable annoying warnings here
-        requests.packages.urllib3.disable_warnings()
+        # requests.packages.urllib3.disable_warnings()
 
         # make sure all required info has been provided
         if not name:
@@ -234,7 +275,7 @@ def main():
             generate_pdf(cluster_json, container_json)
 
     else:
-        print "\nNo HTML templates were found in the 'templates' directory.  You'll need one of these to continue.\n"
+        print("\nNo HTML templates were found in the 'templates' directory.  You'll need one of these to continue.\n")
 
 if __name__ == "__main__":
     main()
